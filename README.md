@@ -16,7 +16,7 @@ han.ajax( url [, settings ] )
 	var handler = AjaxQueue.setup(),
 		priority = 0; // 优先级为0是普通请求，1为高级请求。 高级请求会优先发送
 
-	hanlder.pushRequest({
+	handler.pushRequest({
 		url: "" ,    // 发送的地址
 		type : "",  // 提交类型
 		complete : function(data){} //请求成功之后的回调函数 
