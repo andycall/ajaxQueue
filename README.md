@@ -6,7 +6,6 @@ ajaxQueue
 
 因为要写个HTML5手机页面而诞生的Ajax队列
 
-han.ajax( url [, settings ] )
 
 ## 用法
 
