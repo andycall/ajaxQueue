@@ -2,11 +2,9 @@ ajaxQueue
 =========
 
 基于jquery的Ajax请求队列
-
+用于处理优先ajax与一般ajax请求
 
 ## 用法
-
-
 
 
 	var handler = AjaxQueue.setup(), // 实例化队列对象

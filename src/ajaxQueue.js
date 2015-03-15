@@ -1,113 +1,113 @@
 
 
-var AjaxQueue = (function(){
-        var queue = [], // 一般请求队列
-            ImportQueue = [], // 高级请求队列
-            Send = [], // 发送队列
-            sendDefault = {
-            	url : "",
-                type : "POST",
-                data : "",
-                complete : function(){}
-            };
+var ajaxQueue = (function($){
+	var queue = [], // 一般请求队列
+	    advancedQueue = [], // 高级请求队列
+	    sendQueue = [], // 发送队列
+	    sendDefault = {
+	        url : "",
+	        type : "POST",
+	        data : "",
+	        complete : function(){}
+	    };
 
-        function AjaxHandle(){
-            this.sendState = false;
-        }
+	function ajaxHandler(){
+	    this.sendState = false;
+	}
 
-        function extend(obj, extension){
-	        for(var key in extension){
-	            if(extension.hasOwnProperty(key) && obj[key] == null){
-	                obj[key] = extension[key];
-	            }
+	function extend(obj, extension){
+	    for(var key in extension){
+	        if(extension.hasOwnProperty(key) && obj[key] == null){
+	            obj[key] = extension[key];
 	        }
-	        return obj;
 	    }
-        AjaxHandle.prototype.pushRequest = function(sendObj, major){
-            var major = major || 0, // 默认为一般请求
-                self = this,
-                sendObj = extend(sendObj, sendDefault);
-                	// debugger;
-            if(!major){
-                queue.push(sendObj);
-            }
-            else{
-                ImportQueue.push(sendObj);
-            }
+	    return obj;
+	}
+	ajaxHandler.prototype.pushRequest = function(sendObj, major){
+	    var major = major || 0, // 默认为一般请求
+	        self = this,
+	        sendObj = extend(sendObj, sendDefault);
+	            // debugger;
+	    if(!major){
+	        queue.push(sendObj);
+	    }
+	    else{
+	        advancedQueue.push(sendObj);
+	    }
 
-            self.init();
-        }
+	    self.init();
+	};
 
-        AjaxHandle.prototype.init = function(){
-            var self = this;
+	ajaxHandler.prototype.init = function(){
+	    var self = this;
 
-            var checkImportant = ImportQueue.length,
-                checkQueue = queue.length,
-                checkSend = Send.length,
-                sendObj = {};
+	    var checkImportant = advancedQueue.length,
+	        checkQueue = queue.length,
+	        checkSend = sendQueue.length,
+	        sendObj = {};
 
-            if(checkImportant > 0){
-                // 发送特殊请求
-                sendObj = ImportQueue.shift();
-                Send.unshift(sendObj);
-            }
-            else if(checkQueue > 0){
-                // 发送一般请求
-                sendObj = queue.shift();
-                Send.push(sendObj);
-            }
-            else if(checkSend == 0){
-                // 没有请求, 服务待起
-                console.log("所有的请求都已成功发送");
-                return true;
-            }
-              // 检查是否正在发送
-            if(self.sendState) return;
+	    if(checkImportant > 0){
+	        // 发送特殊请求
+	        sendObj = advancedQueue.shift();
+	        sendQueue.unshift(sendObj);
+	    }
+	    else if(checkQueue > 0){
+	        // 发送一般请求
+	        sendObj = queue.shift();
+	        sendQueue.push(sendObj);
+	    }
+	    else if(checkSend == 0){
+	        // 没有请求, 服务待起
+	        console.log("所有的请求都已成功发送");
+	        return true;
+	    }
+	      // 检查是否正在发送
+	    if(self.sendState) return;
 
 
-            self.send();
-        }
+	    self.sendQueue();
+	};
 
-        AjaxHandle.prototype.handleError = function(err){
-            var self = this;
-            console.log(err);
+	ajaxHandler.prototype.handleError = function(err){
+	    var self = this;
+	    console.log(err);
 
-            self.init();
-        }
+	    self.init();
+	};
 
-        AjaxHandle.prototype.send = function(){
-            var self = this,
-                sendObj,
-                request;
+	ajaxHandler.prototype.sendQueue = function(){
+	    var self = this,
+	        sendObj,
+	        request;
 
-            self.sendState = true;
+	    self.sendState = true;
 
-            sendObj = Send.shift();
+	    sendObj = sendQueue.shift();
 
-            if(!sendObj) return;
+	    if(!sendObj) return;
 
-            request = $.ajax({
-                url : sendObj.url,
-                type : sendObj.type,
-                data : sendObj.data
-            });
+	    request = $.ajax({
+	        url : sendObj.url,
+	        type : sendObj.type,
+	        data : sendObj.data
+	    });
 
-            request.done(function(data){
-            	self.sendState = false;
-                sendObj.complete.call(null, data)
-                self.init();
-            });
+	    request.done(function(data){
+	        self.sendState = false;
+	        sendObj.complete.call(null, data)
+	        self.init();
+	    });
 
-            request.fail(function(e, textStatus){
-            	self.sendState = false;
-                self.handleError(textStatus);
-                self.init();
-            });
-        };
+	    request.fail(function(e, textStatus){
+	        self.sendState = false;
+	        self.handleError(textStatus);
+	        self.init();
+	    });
+	};
 
-        AjaxHandle.setup = function(){
-            return new AjaxHandle();
-        }
+	ajaxHandler.setup = function(){
+	    return new ajaxHandler();
+	};
 
-        return AjaxHandle;
-    })();	
+	return ajaxHandler;
+})(jQuery);
