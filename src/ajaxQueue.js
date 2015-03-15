@@ -1,113 +1,104 @@
-
-
-var ajaxQueue = (function($){
+var AjaxQueue = (function($){
 	var queue = [], // 一般请求队列
 	    advancedQueue = [], // 高级请求队列
 	    sendQueue = [], // 发送队列
-	    sendDefault = {
-	        url : "",
-	        type : "POST",
-	        data : "",
-	        complete : function(){}
-	    };
+		errorQueue = [];
 
-	function ajaxHandler(){
+
+	function AjaxHandler(){
 	    this.sendState = false;
 	}
 
-	function extend(obj, extension){
-	    for(var key in extension){
-	        if(extension.hasOwnProperty(key) && obj[key] == null){
-	            obj[key] = extension[key];
-	        }
-	    }
-	    return obj;
-	}
-	ajaxHandler.prototype.pushRequest = function(sendObj, major){
-	    var major = major || 0, // 默认为一般请求
-	        self = this,
-	        sendObj = extend(sendObj, sendDefault);
-	            // debugger;
-	    if(!major){
-	        queue.push(sendObj);
+	AjaxHandler.prototype.pushRequest = function(major, settings){
+		var priority = major || 0, // 默认为一般请求
+			hasWhen = arguments.length > 2,
+			self = this,
+			param = $.extend({
+				type : "POST",
+				url : "",
+				data : {},
+				success : function(){},
+				error : function(){},
+				context : null
+			}, settings);
+
+	    if(!priority){
+	        queue.push(param);
 	    }
 	    else{
-	        advancedQueue.push(sendObj);
+	        advancedQueue.push(param);
 	    }
 
 	    self.init();
 	};
 
-	ajaxHandler.prototype.init = function(){
+	AjaxHandler.prototype.init = function(){
 	    var self = this;
 
-	    var checkImportant = advancedQueue.length,
+	    var checkPriority = advancedQueue.length,
 	        checkQueue = queue.length,
 	        checkSend = sendQueue.length,
-	        sendObj = {};
+	        param;
 
-	    if(checkImportant > 0){
+	    if(checkPriority > 0){
 	        // 发送特殊请求
-	        sendObj = advancedQueue.shift();
-	        sendQueue.unshift(sendObj);
+		    param = advancedQueue.shift();
+	        sendQueue.unshift(param);
 	    }
 	    else if(checkQueue > 0){
 	        // 发送一般请求
-	        sendObj = queue.shift();
-	        sendQueue.push(sendObj);
+	        param = queue.shift();
+	        sendQueue.push(param);
 	    }
-	    else if(checkSend == 0){
+	    else if(checkSend === 0){
 	        // 没有请求, 服务待起
-	        console.log("所有的请求都已成功发送");
 	        return true;
 	    }
 	      // 检查是否正在发送
 	    if(self.sendState) return;
 
-
 	    self.sendQueue();
 	};
 
-	ajaxHandler.prototype.handleError = function(err){
+	AjaxHandler.prototype.handleError = function(errorQueue){
 	    var self = this;
-	    console.log(err);
-
-	    self.init();
+	    console.log(errorQueue);
 	};
 
-	ajaxHandler.prototype.sendQueue = function(){
+	AjaxHandler.prototype.sendQueue = function(){
 	    var self = this,
-	        sendObj,
+	        param,
 	        request;
 
 	    self.sendState = true;
 
-	    sendObj = sendQueue.shift();
+		param = sendQueue.shift();
 
-	    if(!sendObj) return;
 
-	    request = $.ajax({
-	        url : sendObj.url,
-	        type : sendObj.type,
-	        data : sendObj.data
-	    });
+	    if(!param) {
+		    self.when();
+		    self.handleError.call(self, errorQueue);
+		    return;
+	    }
+
+	    request = $.ajax(param);
 
 	    request.done(function(data){
 	        self.sendState = false;
-	        sendObj.complete.call(null, data)
 	        self.init();
 	    });
 
-	    request.fail(function(e, textStatus){
+	    request.fail(function(error){
 	        self.sendState = false;
-	        self.handleError(textStatus);
+			errorQueue.push(error);
 	        self.init();
 	    });
 	};
 
-	ajaxHandler.setup = function(){
-	    return new ajaxHandler();
-	};
+	// TODO: When
+	//AjaxHandler.prototype.when = function(callback){
+	//	callback.call(this);
+	//};
 
-	return ajaxHandler;
+	return AjaxHandler;
 })(jQuery);

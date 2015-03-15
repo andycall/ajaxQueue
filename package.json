@@ -1,0 +1,5 @@
+{
+  "name": "ajxQueue",
+  "version": "0.2.0",
+  "description" : "基于jQuery的ajax请求队列"
+}

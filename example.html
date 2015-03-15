@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+<body>
+
+</body>
+<script src="http://hongyan.cqupt.edu.cn/cdn/js/jquery-2.1.1.js"></script>
+<script src="src/ajaxQueue.js"></script>
+<script>
+
+var ajaxQueue = new AjaxQueue();
+var o = {};
+for(var i = 0; i < 10; i ++){
+	ajaxQueue.pushRequest(0, {
+		type : "GET",
+		url : "/ajaxQueue/package.json",
+		success : function(){
+			console.log(this);
+		},
+		error : function(){
+
+		},
+		context : o
+	});
+}
+
+	ajaxQueue.pushRequest(1, {
+		type : "GET",
+		url : "/ajaxQueue/.gitignore",
+		success : function(){
+			console.log(this);
+		},
+		error : function(){
+
+		},
+		context : window
+	});
+
+//	TODO
+//	ajaxQueue.when(function(){
+//		console.log('all request complete');
+//	});
+
+</script>
+</html>
